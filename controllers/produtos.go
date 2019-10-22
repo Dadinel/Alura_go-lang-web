@@ -50,11 +50,52 @@ func Insert(w http.ResponseWriter, r *http.Request) {
 }
 
 func Delete(w http.ResponseWriter, r *http.Request) {
-	idDoProduto := r.URL.Query().Get("id")
+	idDoProduto := getIdFromUrl(r)
 	models.DeletaProduto(idDoProduto)
+	goToIndex(w, r)
+}
+
+func Edit(w http.ResponseWriter, r *http.Request) {
+	idDoProduto := getIdFromUrl(r)
+	produto := models.BuscaProduto(idDoProduto)
+	temp.ExecuteTemplate(w, "Edit", produto)
+}
+
+func Update(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+		id := r.FormValue("id")
+		nome := r.FormValue("nome")
+		descricao := r.FormValue("descricao")
+		preco := r.FormValue("preco")
+		quantidade := r.FormValue("quantidade")
+
+		idConvertidoParaInt, err := strconv.Atoi(id)
+
+		if err != nil {
+			log.Println("Erro na conversão do id: ", err)
+		}
+
+		precoConvertidoParaFloat, err := strconv.ParseFloat(preco, 64)
+
+		if err != nil {
+			log.Println("Erro na conversão do preço: ", err)
+		}
+
+		quantidadeConvertidaParaInt, err := strconv.Atoi(quantidade)
+
+		if err != nil {
+			log.Println("Erro na conversão da quantidade: ", err)
+		}
+
+		models.AtualizaProduto(idConvertidoParaInt, nome, descricao, precoConvertidoParaFloat, quantidadeConvertidaParaInt)
+	}
 	goToIndex(w, r)
 }
 
 func goToIndex(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", 301)
+}
+
+func getIdFromUrl(r *http.Request) string {
+	return r.URL.Query().Get("id")
 }
